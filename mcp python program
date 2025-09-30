@@ -1,0 +1,57 @@
+# weather_agent.py
+
+import os
+import requests
+from dotenv import load_dotenv
+from fastmcp import FastMCP
+
+
+# Load environment variables from .env file
+load_dotenv()
+
+API_KEY = os.getenv("OPENWEATHER_API_KEY")
+if not API_KEY:
+    raise ValueError("Missing API key. Please set OPENWEATHER_API_KEY in your .env file.")
+
+
+# Create MCP server
+mcp = FastMCP("Weather Bot", "Fetch current weather information for a given city")
+
+
+# Define tool
+@mcp.tool()
+def get_weather_data(city: str) -> str:
+    """
+    Fetch current weather for a given city using the OpenWeather API.
+    Returns a formatted weather report as a string.
+    """
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        return f"❌ Error fetching weather: {e}"
+
+    data = resp.json()
+
+    # Validate API response
+    if "weather" not in data or "main" not in data:
+        return f"⚠️ Unexpected API response: {data}"
+
+    weather = data["weather"][0].get("description", "N/A")
+    temp = data["main"].get("temp", "N/A")
+    feels = data["main"].get("feels_like", "N/A")
+    humidity = data["main"].get("humidity", "N/A")
+
+    return (
+        f"🌍 Weather in {city}:\n"
+        f"- Condition: {weather}\n"
+        f"- Temperature: {temp}°C (feels like {feels}°C)\n"
+        f"- Humidity: {humidity}%"
+    )
+
+
+# Run MCP server
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
