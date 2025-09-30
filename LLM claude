@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "weather": {
+      "command": "python",     #uv method not working its installed very hard.
+      "args": [
+        "D:\\weatheragent\\weather_agent.py"
+      ]
+    }
+  }
+}
